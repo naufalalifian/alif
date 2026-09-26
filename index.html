@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrintCost — Kalkulator Harga Cetak Otomatis</title>
+<meta name="description" content="Alat hitung biaya cetak otomatis: baca PDF, Word, Excel, PowerPoint, tentukan warna/hitam putih per halaman, review &amp; koreksi hasil deteksi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-header-inner">
+    <div class="brand">
+      <div class="brand-icon"><i class="fa-solid fa-print"></i></div>
+      <div class="brand-text">
+        <h1>PrintCost</h1>
+        <p>Hitung harga cetak otomatis dari file pelanggan</p>
+      </div>
+    </div>
+  </div>
+  <nav class="app-nav" aria-label="Navigasi utama">
+    <button class="nav-btn aktif" data-panel="panel-upload"><i class="fa-solid fa-cloud-arrow-up"></i> <span class="teks-nav">Unggah File</span></button>
+    <button class="nav-btn" data-panel="panel-hasil"><i class="fa-solid fa-list-check"></i> <span class="teks-nav">Hasil &amp; Review</span></button>
+    <button class="nav-btn" data-panel="panel-order"><i class="fa-solid fa-receipt"></i> <span class="teks-nav">Total Order</span></button>
+    <button class="nav-btn" data-panel="panel-pengaturan"><i class="fa-solid fa-sliders"></i> <span class="teks-nav">Pengaturan Harga</span></button>
+    <button class="nav-btn" data-panel="panel-riwayat"><i class="fa-solid fa-clock-rotate-left"></i> <span class="teks-nav">Riwayat</span></button>
+  </nav>
+</header>
+
+<main class="app-main">
+
+  <!-- ======================= PANEL 1: UNGGAH ======================= -->
+  <section class="panel aktif" id="panel-upload" aria-labelledby="judul-unggah">
+    <div class="card">
+      <h2 class="card-title" id="judul-unggah"><i class="fa-solid fa-cloud-arrow-up"></i> Unggah file pelanggan</h2>
+      <p class="card-sub">File dibaca langsung di perangkat ini — tidak dikirim ke mana pun. Sistem akan mendeteksi setiap halaman:
+        berwarna atau hitam putih, serta apakah ada gambar besar / penuh halaman, lalu menghitung harga secara otomatis.</p>
+
+      <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Pilih atau tarik file ke sini">
+        <i class="fa-solid fa-file-circle-plus big"></i>
+        <h3>Klik di sini atau tarik file ke area ini</h3>
+        <p>Bisa beberapa file sekaligus (satu pesanan)</p>
+        <p><strong>PDF, DOCX, XLSX, PPTX, TXT, JPG, PNG</strong></p>
+        <div class="format-tags">
+          <span>PDF</span><span>WORD .docx</span><span>EXCEL</span><span>POWERPOINT</span><span>TXT / RTF</span><span>JPG / PNG</span>
+        </div>
+      </div>
+      <input type="file" id="file-input" multiple hidden
+        accept=".pdf,.docx,.xlsx,.xls,.csv,.pptx,.txt,.md,.rtf,.log,.jpg,.jpeg,.png,.webp,.bmp,.gif">
+
+      <p class="catatan-kecil"><i class="fa-solid fa-circle-info"></i> File .doc / .ppt lama tidak didukung browser — minta pelanggan menyimpan ulang sebagai .docx atau PDF.
+        Untuk Word, jumlah &amp; tata letak halaman disusun ulang mengikuti ukuran A4, jadi silakan cek lewat review.</p>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title"><i class="fa-solid fa-scale-balanced"></i> Aturan harga yang sedang dipakai</h2>
+      <p class="card-sub">Ini ringkasan harga aktif. Semua angka bisa diubah di tab <strong>Pengaturan Harga</strong>.</p>
+      <div class="set-grid" id="aturan-ringkas"></div>
+    </div>
+  </section>
+
+  <!-- ======================= PANEL 2: HASIL & REVIEW ======================= -->
+  <section class="panel" id="panel-hasil" aria-labelledby="judul-hasil">
+    <div class="card">
+      <h2 class="card-title" id="judul-hasil"><i class="fa-solid fa-calculator"></i> Hasil perhitungan harga</h2>
+      <p class="card-sub">Pilih file di bawah untuk melihat rincian. Setiap halaman sudah dinilai otomatis.</p>
+      <div class="doc-tabs" id="doc-tabs"></div>
+      <div id="ringkasan"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title"><i class="fa-solid fa-images"></i> Review per halaman</h2>
+      <p class="card-sub">Klik gambar halaman untuk <strong>memperbesar</strong>. Di jendela perbesar kamu bisa mengoreksi jenis halaman
+        (warna / hitam putih dan besarnya gambar). Tekan <strong>Konfirmasi</strong> dua kali untuk menandai halaman sudah kamu koreksi 2×.
+        Halaman yang sudah diubah manual diberi tanda oranye.</p>
+
+      <div class="review-toolbar">
+        <div class="legend">
+          <span><i class="lg-warna"></i> Halaman warna</span>
+          <span><i class="lg-hp"></i> Hitam putih</span>
+          <span><i class="lg-edit"></i> Dikoreksi manual</span>
+          <span>✓ 1× / ✓ 2× = jumlah koreksi</span>
+        </div>
+        <div class="btn-group" style="flex:0 0 auto">
+          <button class="btn btn-ghost btn-kecil" id="btn-tandai-review"><i class="fa-solid fa-check-double"></i> Tandai semua sudah 2×</button>
+          <button class="btn btn-ghost btn-kecil" id="btn-reset-koreksi"><i class="fa-solid fa-rotate-left"></i> Kembalikan ke auto</button>
+        </div>
+      </div>
+
+      <div id="review-grid"></div>
+    </div>
+  </section>
+
+  <!-- ======================= PANEL 3: ORDER ======================= -->
+  <section class="panel" id="panel-order" aria-labelledby="judul-order">
+    <div class="card">
+      <h2 class="card-title" id="judul-order"><i class="fa-solid fa-receipt"></i> Total pesanan</h2>
+      <p class="card-sub">Total dari semua file yang sudah dianalisa dalam satu pesanan.</p>
+      <div class="order-grid">
+        <div>
+          <div class="order-baris"><span>Subtotal cetak</span><span id="order-subtotal">Rp 0</span></div>
+          <div class="order-baris"><span>Diskon</span><span id="order-diskon">- Rp 0</span></div>
+          <div class="order-baris"><span>Biaya tambahan (finishing, dll)</span><span id="order-biaya">Rp 0</span></div>
+          <div class="order-baris"><span>Jumlah halaman cetak</span><span id="order-halaman">0 halaman</span></div>
+          <div class="order-baris total"><span>TOTAL</span><span id="order-total">Rp 0</span></div>
+          <div class="minimal-warn" id="order-minimal"></div>
+        </div>
+        <div>
+          <div class="field-block">
+            <label for="order-pelanggan">Nama pelanggan</label>
+            <input type="text" id="order-pelanggan" class="field-input" placeholder="Contoh: Budi / Toko Sinar">
+          </div>
+          <div class="field-block">
+            <label for="order-catatan">Catatan pesanan</label>
+            <textarea id="order-catatan" class="field-input" placeholder="Contoh: 1 halaman halaman 3 minta dicetak warna A3"></textarea>
+          </div>
+          <button class="btn btn-primary btn-block" id="btn-simpan-order"><i class="fa-solid fa-floppy-disk"></i> Simpan ke riwayat</button>
+          <button class="btn btn-ghost btn-block" id="btn-cetak-nota" style="margin-top:10px"><i class="fa-solid fa-print"></i> Cetak nota / penawaran</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin:20px 0 0; box-shadow:none; background:#fbfaff;">
+        <h3 class="card-title" style="font-size:15px"><i class="fa-solid fa-lightbulb"></i> Rincian per file</h3>
+        <p class="card-sub">Masing-masing file menampilkan jumlah halaman warna / hitam putih dan sub-totalnya.</p>
+        <div id="order-detail-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= PANEL 4: PENGATURAN ======================= -->
+  <section class="panel" id="panel-pengaturan" aria-labelledby="judul-set">
+    <div class="card">
+      <h2 class="card-title" id="judul-set"><i class="fa-solid fa-tags"></i> Harga per halaman</h2>
+      <p class="card-sub">Ubah harga kapan saja. Contoh aturan standar: warna biasa Rp 1.000, hitam putih biasa Rp 500,
+        halaman dengan gambar penuh Rp 2.000, gambar hampir penuh Rp 1.500. Matikan aturan bila tidak dipakai.</p>
+      <div id="set-rules"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title"><i class="fa-solid fa-microscope"></i> Ketelitian deteksi</h2>
+      <p class="card-sub">Semakin tinggi ambang, semakin sering sebuah halaman dianggap berwarna / bergambar besar.
+        Sesuaikan dengan hasil review sampai cocok.</p>
+      <div class="set-grid">
+        <div class="field-block">
+          <label for="set-kualitas">Mode analisa</label>
+          <select id="set-kualitas" class="field-input">
+            <option value="cepat">Cepat (file besar, kurang teliti)</option>
+            <option value="seimbang">Seimbang (disarankan)</option>
+            <option value="teliti">Teliti (paling akurat, lebih lambat)</option>
+          </select>
+        </div>
+        <div class="field-block">
+          <label for="set-warna">Ambang halaman berwarna (% piksel berwarna)</label>
+          <input type="number" id="set-warna" step="0.01" min="0" class="field-input">
+        </div>
+        <div class="field-block">
+          <label for="set-penuh">Ambang "gambar penuh 1 halaman" (% halaman)</label>
+          <input type="number" id="set-penuh" step="1" min="0" max="100" class="field-input">
+        </div>
+        <div class="field-block">
+          <label for="set-hampir">Ambang "gambar hampir penuh" (% halaman)</label>
+          <input type="number" id="set-hampir" step="1" min="0" max="100" class="field-input">
+        </div>
+        <div class="field-block">
+          <label for="set-kosong">Halaman dianggap kosong bila tinta di bawah (% halaman)</label>
+          <input type="number" id="set-kosong" step="0.1" min="0" class="field-input">
+        </div>
+        <div class="field-block">
+          <label for="set-harga-kosong">Harga halaman kosong (Rp)</label>
+          <input type="number" id="set-harga-kosong" step="50" min="0" class="field-input">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title"><i class="fa-solid fa-store"></i> Identitas &amp; biaya pesanan</h2>
+      <div class="set-grid">
+        <div class="field-block">
+          <label for="set-nama-toko">Nama usaha</label>
+          <input type="text" id="set-nama-toko" class="field-input">
+        </div>
+        <div class="field-block">
+          <label for="set-kontak">Kontak (WA / telp)</label>
+          <input type="text" id="set-kontak" class="field-input">
+        </div>
+        <div class="field-block">
+          <label for="set-catatan-nota">Catatan pada nota</label>
+          <input type="text" id="set-catatan-nota" class="field-input">
+        </div>
+        <div class="field-block">
+          <label for="set-minimal">Minimal order (Rp)</label>
+          <input type="number" id="set-minimal" step="500" min="0" class="field-input">
+        </div>
+        <div class="field-block">
+          <label for="set-biaya">Biaya tambahan tetap (Rp)</label>
+          <input type="number" id="set-biaya" step="500" min="0" class="field-input">
+        </div>
+        <div class="field-block">
+          <label for="set-diskon">Diskon (%)</label>
+          <input type="number" id="set-diskon" step="1" min="0" max="100" class="field-input">
+        </div>
+      </div>
+      <div class="form-aksi">
+        <button class="btn btn-primary" id="btn-simpan-set"><i class="fa-solid fa-floppy-disk"></i> Simpan pengaturan</button>
+        <button class="btn btn-ghost" id="btn-reset-set"><i class="fa-solid fa-rotate-left"></i> Kembalikan ke awal</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= PANEL 5: RIWAYAT ======================= -->
+  <section class="panel" id="panel-riwayat" aria-labelledby="judul-riwayat">
+    <div class="card">
+      <h2 class="card-title" id="judul-riwayat"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat pesanan</h2>
+      <p class="card-sub">Semua pesanan yang kamu simpan tersimpan di sini dan bisa diekspor ke Excel/CSV.</p>
+      <button class="btn btn-ghost" id="btn-ekspor" style="margin-bottom:16px"><i class="fa-solid fa-file-csv"></i> Ekspor semua ke CSV</button>
+      <div id="riwayat-list"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ==================== MODAL: REVIEW & KOREKSI HALAMAN ==================== -->
+<div class="modal" id="modal-review" role="dialog" aria-modal="true" aria-labelledby="rv-judul">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <h3 id="rv-judul">Pratinjau halaman</h3>
+        <p id="rv-alasan"></p>
+      </div>
+      <button class="modal-tutup" id="rv-tutup" aria-label="Tutup pratinjau"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-view">
+        <div class="view-toolbar">
+          <button id="rv-zoom-out" title="Perkecil (-)"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+          <span class="zoom-label" id="rv-zoom-info">100%</span>
+          <button id="rv-zoom-in" title="Perbesar (+)"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+          <button id="rv-zoom-reset" title="Ukuran asli"><i class="fa-solid fa-expand"></i></button>
+          <div class="navigasi">
+            <button id="rv-prev" title="Halaman sebelumnya (←)"><i class="fa-solid fa-chevron-left"></i></button>
+            <span class="zoom-label" style="min-width:auto; padding:0 6px;">Geser halaman / tombol panah</span>
+            <button id="rv-next" title="Halaman berikutnya (→)"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+        <div class="gambar-wrap">
+          <img id="rv-gambar" alt="Pratinjau halaman diperbesar">
+          <div id="rv-loading-gambar"><div class="spin-sm"></div> Menyiapkan pratinjau resolusi tinggi…</div>
+        </div>
+      </div>
+
+      <aside class="modal-side">
+        <div class="side-section">
+          <h4>1. Jenis halaman</h4>
+          <div class="btn-group" id="rv-mode">
+            <button data-mode="warna"><i class="fa-solid fa-palette"></i> Warna</button>
+            <button data-mode="hp"><i class="fa-solid fa-moon"></i> Hitam putih</button>
+          </div>
+        </div>
+
+        <div class="side-section">
+          <h4>2. Ukuran gambar pada halaman</h4>
+          <div class="btn-group ahli" id="rv-kat">
+            <button data-kat="penuh"><i class="fa-solid fa-table-cells-large"></i> Gambar penuh</button>
+            <button data-kat="hampir"><i class="fa-solid fa-table-cells"></i> Hampir penuh</button>
+            <button data-kat="biasa"><i class="fa-solid fa-font"></i> Biasa</button>
+            <button data-kat="kosong"><i class="fa-regular fa-file"></i> Kosong</button>
+          </div>
+        </div>
+
+        <div class="side-section">
+          <h4>Catatan untuk halaman ini</h4>
+          <textarea id="rv-catatan" placeholder="Contoh: logo warna kecil, sisanya hitam putih"></textarea>
+        </div>
+
+        <div class="side-section">
+          <h4>Hasil deteksi</h4>
+          <div class="metrik" id="rv-metrik"></div>
+        </div>
+
+        <div class="side-section">
+          <h4>Status koreksi</h4>
+          <div class="status-review" id="rv-status"></div>
+          <button class="btn btn-primary btn-konfirmasi" id="rv-konfirmasi" style="width:100%;justify-content:center;margin-top:10px">
+            <i class="fa-solid fa-check"></i> Konfirmasi halaman ini
+          </button>
+        </div>
+
+        <div class="side-section">
+          <h4>Harga halaman ini</h4>
+          <div class="harga-box">
+            <div class="nilai" id="rv-harga">Rp 0</div>
+            <div class="ket" id="rv-harga-rule"></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<div class="loading" id="loading">
+  <div class="loading-box">
+    <div class="spin"></div>
+    <h3 id="load-title">Menganalisa file…</h3>
+    <p id="load-sub"></p>
+    <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+    <p id="progress-teks"></p>
+    <p id="load-phase"></p>
+  </div>
+</div>
+
+<div id="toast-box" aria-live="polite"></div>
+
+<script src="js/analyzer.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
